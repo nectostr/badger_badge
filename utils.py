@@ -5,7 +5,7 @@ import time
 # Draw an overlay box with a given message within it
 def warning(
         message: str, display=None, timeout: int = 0,
-        width: int = badger2040.WIDTH - 40, height: int = badger2040.HEIGHT - 40,
+        width: int = badger2040.WIDTH, height: int = badger2040.HEIGHT,
         line_spacing: int = 20, text_size: float = 0.6
 ):
     if display is None:
