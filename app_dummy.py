@@ -5,7 +5,7 @@ def enter(display) -> None:
     main_badge.main(display)
 
 def process_a(display) -> None:
-    warning("Dummy module: process_a", display)
+    main_badge.main(display)
 
 
 def process_b(display) -> None:

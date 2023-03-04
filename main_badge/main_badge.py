@@ -18,12 +18,6 @@ LEFT_PADDING = 5
 NAME_PADDING = 20
 DETAIL_SPACING = 10
 
-DEFAULT_TEXT = """Liu Kurafeeva
-UCSB, CS Ph.D.
-ML Researcher
-LinkedIN
-"""
-
 
 
 
@@ -129,10 +123,10 @@ def main(display):
     # Open the badge file
 
     # # Read in the next 6 lines
-
-    name = "Liu Kurafeeva"
-    company = "UCSB"
-    details = "Ph.D. Student"
+    with open("badge.txt", "r") as f:
+        name = f.readline().strip()
+        company = f.readline().strip()
+        details = f.readline().strip()
     BADGE_IMAGE = bytearray(int(IMAGE_WIDTH * IMAGE_WIDTH / 8))
     open("badge-image.bin", "rb").readinto(BADGE_IMAGE)
     badge = Badge(name, company, details, BADGE_IMAGE)
