@@ -11,7 +11,7 @@ IMAGE_WIDTH = config.IMAGE_SIZE
 NAME_HEIGHT = 20
 TEXT_WIDTH = WIDTH - IMAGE_WIDTH
 
-COMPANY_TEXT_SIZE = 0.6
+NAME_TEXT_SIZE = 0.6
 DETAILS_TEXT_SIZE = 0.5
 
 LEFT_PADDING = 5
@@ -46,93 +46,59 @@ class Badge:
         self.details = details
         self.image = image
 
+
+def calc_text_size(display, text, box_size):
+    name_size = 2
+    name_length = 1000
+    while (name_length / len(text)) > box_size / 2:
+        name_length = display.measure_text(text, name_size)
+        name_size -= 0.1
+    return name_size
 # Draw the badge, including user text
 def draw_badge(display, badge: Badge):
-    display.pen(0)
+    lines = [f"line{i}" for i in range(5)]
+    sizes = [1] * len(lines)
+    modifier = HEIGHT / sum(sizes)
+    boxes = [(LEFT_PADDING, round(sum(sizes[j] for j in range(i))*modifier))
+             for i in range(len(lines) + 1)]
+    # boxes.append((LEFT_PADDING, HEIGHT))
+    # display.invert(0)  # Invert the display 0-15 black to white
+    display.pen(15) # WHITE
     display.clear()
 
+    # White background for text
+    # display.pen(15) # BLACK
+    # display.rectangle(1, 1, WIDTH - 2, HEIGHT - 2)
+
     # Draw badge image
-    display.image(badge.image, IMAGE_WIDTH, IMAGE_WIDTH, WIDTH - IMAGE_WIDTH, 0)
+    display.image(badge.image, IMAGE_WIDTH, IMAGE_WIDTH, WIDTH - IMAGE_WIDTH - 1, 1)
 
-    # Draw a border around the image
     display.pen(0)
-    display.thickness(1)
-    display.line(WIDTH - IMAGE_WIDTH, 0, WIDTH - 1, 0)
-    display.line(WIDTH - IMAGE_WIDTH, 0, WIDTH - IMAGE_WIDTH, IMAGE_WIDTH - 1)
-    display.line(WIDTH - IMAGE_WIDTH, IMAGE_WIDTH - 1, WIDTH - 1, IMAGE_WIDTH - 1)
-    display.line(WIDTH - 1, 0, WIDTH - 1, IMAGE_WIDTH - 1)
-
-    # Uncomment this if a white background is wanted behind the company
-    display.pen(15)
-    display.rectangle(1, 1, TEXT_WIDTH, NAME_HEIGHT - 1)
-
-    # Draw the name
-    display.pen(15)  # Change this to 0 if a white background is used
-    display.font("serif")
-    display.thickness(3)
-    display.text(badge.name, LEFT_PADDING, (NAME_HEIGHT // 2) + 1, COMPANY_TEXT_SIZE)
-    #
-    # # Draw a white background behind the name
-    # display.pen(15)
-    # display.thickness(1)
-    # display.rectangle(1, COMPANY_HEIGHT + 1, TEXT_WIDTH, NAME_HEIGHT)
-    #
-    # # Draw the name, scaling it based on the available width
-    # display.pen(0)
-    # display.font("sans")
-    # display.thickness(4)
-    # name_size = 2.0  # A sensible starting scale
-    # while True:
-    #     name_length = display.measure_text(name, name_size)
-    #     if name_length >= (TEXT_WIDTH - NAME_PADDING) and name_size >= 0.1:
-    #         name_size -= 0.01
-    #     else:
-    #         display.text(name, (TEXT_WIDTH - name_length) // 2, (NAME_HEIGHT // 2) + COMPANY_HEIGHT + 1, name_size)
-    #         break
-    #
-    # # Draw a white backgrounds behind the details
-    # display.pen(15)
-    # display.thickness(1)
-    # display.rectangle(1, HEIGHT - DETAILS_HEIGHT * 2, TEXT_WIDTH, DETAILS_HEIGHT - 1)
-    # display.rectangle(1, HEIGHT - DETAILS_HEIGHT, TEXT_WIDTH, DETAILS_HEIGHT - 1)
-    #
-    # # Draw the first detail's title and text
-    # display.pen(0)
-    # display.font("sans")
-    # display.thickness(3)
-    # name_length = display.measure_text(detail1_title, DETAILS_TEXT_SIZE)
-    # display.text(detail1_title, LEFT_PADDING, HEIGHT - ((DETAILS_HEIGHT * 3) // 2), DETAILS_TEXT_SIZE)
-    # display.thickness(2)
-    # display.text(detail1_text, 5 + name_length + DETAIL_SPACING, HEIGHT - ((DETAILS_HEIGHT * 3) // 2), DETAILS_TEXT_SIZE)
-    #
-    # # Draw the second detail's title and text
-    # display.thickness(3)
-    # name_length = display.measure_text(detail2_title, DETAILS_TEXT_SIZE)
-    # display.text(detail2_title, LEFT_PADDING, HEIGHT - (DETAILS_HEIGHT // 2), DETAILS_TEXT_SIZE)
-    # display.thickness(2)
-    # display.text(detail2_text, LEFT_PADDING + name_length + DETAIL_SPACING, HEIGHT - (DETAILS_HEIGHT // 2), DETAILS_TEXT_SIZE)
+    display.text("^LinkedIn^", TEXT_WIDTH, HEIGHT-10, 0.6)
 
 
-# ------------------------------
-#        Program setup
-# ------------------------------
+    display.pen(0)
+    for i in range(0, len(lines)):
+        display.font("serif")
+        display.thickness(1)
+        name_size = calc_text_size(display, lines[i], boxes[i+1][1] - boxes[i][1])
+
+        display.text(lines[i], boxes[i][0],  #{boxes[i+1][1] - boxes[i][1]}
+                     (boxes[i][1] + boxes[i+1][1])//2, name_size)
+
+    for i in range(len(boxes) - 1):
+        display.line(0, boxes[i][1], 0, boxes[i+1][1])
+        display.line(0, boxes[i][1], TEXT_WIDTH-1, boxes[i][1])
+    display.line(0, HEIGHT-1, WIDTH, HEIGHT-1)
+
 
 def main(display):
-# Create a new Badger and set it to update NORMAL
-
-    # Open the badge file
-
-    # # Read in the next 6 lines
-    with open("badge.txt", "r") as f:
+    with open("main_badge/badge.txt", "r") as f:
         name = f.readline().strip()
         company = f.readline().strip()
         details = f.readline().strip()
     BADGE_IMAGE = bytearray(int(IMAGE_WIDTH * IMAGE_WIDTH / 8))
-    open("badge-image.bin", "rb").readinto(BADGE_IMAGE)
+    open("main_badge/badge-image.bin", "rb").readinto(BADGE_IMAGE)
     badge = Badge(name, company, details, BADGE_IMAGE)
     draw_badge(display, badge)
     display.update()
-    # while True:
-    #     display.update()
-    #     # If on battery, halt the Badger to save power, it will wake up if any of the front buttons are pressed
-    #     display.halt()
