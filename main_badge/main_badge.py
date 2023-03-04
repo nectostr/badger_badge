@@ -45,27 +45,35 @@ class Badge:
         self.company = company
         self.details = details
         self.image = image
+        self.lines = details + [name, company]
+        self.sizes = [1] * len(details) + [2, 1]
+        self.boxes = None
+        self.boxes = [0] * len(details) + [1, 0, 1]
 
 
-def calc_text_size(display, text, box_size):
+def calc_text_size(display, text, box_size, max_width):
     name_size = 2
     name_length = 1000
-    while (name_length / len(text)) > box_size / 2:
+    while (name_length // len(text)) * 1.7 > box_size or name_length > max_width+5:
         name_length = display.measure_text(text, name_size)
         name_size -= 0.1
     return name_size
 # Draw the badge, including user text
 def draw_badge(display, badge: Badge):
-    lines = [f"line{i}" for i in range(5)]
-    sizes = [1] * len(lines)
-    modifier = HEIGHT / sum(sizes)
+    lines = badge.lines
+    sizes = badge.sizes
+    if badge.boxes is None:
+        edges = [1] * len(lines)
+    else:
+        edges = badge.boxes
+
+    modifier = HEIGHT // sum(sizes)
     boxes = [(LEFT_PADDING, round(sum(sizes[j] for j in range(i))*modifier))
              for i in range(len(lines) + 1)]
     # boxes.append((LEFT_PADDING, HEIGHT))
     # display.invert(0)  # Invert the display 0-15 black to white
     display.pen(15) # WHITE
     display.clear()
-
     # White background for text
     # display.pen(15) # BLACK
     # display.rectangle(1, 1, WIDTH - 2, HEIGHT - 2)
@@ -74,21 +82,27 @@ def draw_badge(display, badge: Badge):
     display.image(badge.image, IMAGE_WIDTH, IMAGE_WIDTH, WIDTH - IMAGE_WIDTH - 1, 1)
 
     display.pen(0)
-    display.text("^LinkedIn^", TEXT_WIDTH, HEIGHT-10, 0.6)
+    display.text("^LinkedIn^", TEXT_WIDTH+5, HEIGHT-10, 0.6)
 
 
     display.pen(0)
     for i in range(0, len(lines)):
-        display.font("serif")
+        display.font("sans")
         display.thickness(1)
-        name_size = calc_text_size(display, lines[i], boxes[i+1][1] - boxes[i][1])
+        name_size = calc_text_size(display, lines[i], boxes[i+1][1] - boxes[i][1], TEXT_WIDTH)
 
-        display.text(lines[i], boxes[i][0],  #{boxes[i+1][1] - boxes[i][1]}
-                     (boxes[i][1] + boxes[i+1][1])//2, name_size)
+        display.text(lines[i],
+                     boxes[i][0],
+                     (boxes[i][1] + boxes[i+1][1])//2
+                        + 5 * ((1 - edges[i+1]))
+                        - 5 * ((1 - edges[i])),
+                     name_size)
 
-    for i in range(len(boxes) - 1):
-        display.line(0, boxes[i][1], 0, boxes[i+1][1])
-        display.line(0, boxes[i][1], TEXT_WIDTH-1, boxes[i][1])
+    display.line(0, 0, WIDTH, 0)
+    for i in range(1, len(boxes) - 1):
+        if edges[i]:
+            display.line(0, boxes[i][1], TEXT_WIDTH-1, boxes[i][1])
+    display.line(0, 0, 0, HEIGHT)
     display.line(0, HEIGHT-1, WIDTH, HEIGHT-1)
 
 
@@ -96,7 +110,7 @@ def main(display):
     with open("main_badge/badge.txt", "r") as f:
         name = f.readline().strip()
         company = f.readline().strip()
-        details = f.readline().strip()
+        details = f.readlines()
     BADGE_IMAGE = bytearray(int(IMAGE_WIDTH * IMAGE_WIDTH / 8))
     open("main_badge/badge-image.bin", "rb").readinto(BADGE_IMAGE)
     badge = Badge(name, company, details, BADGE_IMAGE)
