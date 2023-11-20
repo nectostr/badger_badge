@@ -1,11 +1,10 @@
 from utils import warning
-from main_badge import main_badge
-
+from main_badge.main_badge import Badge, draw_badge
 def enter(display) -> None:
-    main_badge.main(display)
+    warning("Dummy module: enter state", display)
 
 def process_a(display) -> None:
-    main_badge.main(display)
+    warning("Dummy module: process_a", display)
 
 
 def process_b(display) -> None:
